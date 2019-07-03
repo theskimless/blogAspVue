@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="" />
+</head>
+<body>
+    <div id="blog">
+        <header class="d-flex">
+            <div class="h-logo">LOGO</div>
+            <div class="h-menu">
+                <div v-for="(rubric, key) in rubrics" class="h-link" :class="{'h-link-active': key === selectedRubric}" @click="selectedRubric = key">{{rubric}}</div>
+            </div>
+        </header>
+        <div class="wrap">
+            <div class="d-flex auth-page" v-if="isAuthShowed !== -1">
+                <div class="auth-p-block" v-click-outside="toggleAuth">
+                    <div v-if="isAuthShowed === 0">
+                        <div class="auth-p-title">Вход</div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Логин/Email" /></div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Пароль" /></div>
+                        <div class="ap-submit"><button type="button">Войти</button></div>
+                    </div>
+                    <div v-if="isAuthShowed === 1">
+                        <div class="auth-p-title">Регистрация</div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Логин" /></div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Email" /></div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="password" placeholder="Пароль" /></div>
+                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="password" placeholder="Подтвердите пароль" /></div>
+                        <div class="ap-submit"><button type="button">Зарегистрироваться</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!--CONTENT HEADER-->
+            <div class="d-flex w-top-wrap">
+                <div class="w-top-buttons d-flex" v-show="selectedPage === 2">
+                    <button @click="selectPage(1)"><img src="imgs/left-arrow.svg" height="35" alt="Alternate Text" /></button>
+                </div>
+                <div class="w-top-search" :class="{'visibility-hidden': selectedPage !== 1}">
+                    <input class="inp-focus" v-model="searchInput" type="text" />
+                </div>
+                <div class="w-top-user">
+                    <div class="w-top-user-cont-wrap">
+                        <div class="w-top-user-cont">
+                            <!--GUEST-->
+                            <div @click="toggleAuth(0)">Вход</div>
+                            <div @click="toggleAuth(1)">Регистрация</div>
+
+                            <!--ADMIN-->
+                            <div v-if="isAdmin" @click="selectedPage === 1 ? selectPage(0) : selectPage(1)">{{mods[selectedPage] || "Статьи"}}</div>
+                            <div v-if="isAdmin">Профиль</div>
+                            <div v-if="isAdmin">Выйти</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--ADMIN-->
+            <div class="main-block" :class="{'main-block-active': selectedPage === 0}">
+                <div class="admin-page">
+                    <div class="ap-warnings" v-for="error in adminPageWarnings">
+                        {{error}}
+                    </div>
+                    <div>
+                        <div class="ap-title" @click="selectAdminSection(3)">Удалить рубрику</div>
+                        <transition name="apcontent">
+                            <div class="ap-content" v-if="selectedAdminSections[3]">
+                                <div v-for="(rubric, key) in rubrics" @click="deleteRubric(key)">{{rubric}}</div>
+                            </div>
+                        </transition>
+                    </div>
+                    <div>
+                        <div class="ap-title" @click="selectAdminSection(0)">Удалить статью</div>
+                        <transition name="apcontent">
+                            <div class="ap-content" v-if="selectedAdminSections[0]">
+                                <div v-for="article in articles" @click="deleteArticle(article.id)">{{article.title}}</div>
+                            </div>
+                        </transition>
+                    </div>
+                    <div>
+                        <div class="ap-title" @click="selectAdminSection(1)">Добавить статью</div>
+                        <transition name="apcontent">
+                            <div class="ap-content" v-if="selectedAdminSections[1]">
+                                <form action="" method="post">
+                                    <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Название" v-model="addArticleForm.title" /></div>
+                                    <div class="ap-input ap-inp-m"><textarea class="inp-focus" placeholder="Текст" v-model="addArticleForm.data"></textarea></div>
+
+                                    <!--<form>
+                                <input @change="filetest" type="file" multiple />
+                                <img :src="testurl" />
+                            </form>-->
+
+                                    <div class="d-flex ap-rubrics ap-inp-m">
+                                        <div class="d-flex b-create-post-select ap-input" v-for="(select, key) in addArticleForm.rubrics">
+                                            <select v-model="addArticleForm.rubrics[key]">
+                                                <option :value="rubricKey" v-for="(rubric, rubricKey) in rubrics" v-if="rubricKey !== 0 && rubricIsNotSelected(key, rubricKey)">{{rubric}}</option>
+                                            </select>
+                                            <button type="button" class="remove-rubric-btn" v-if="key !== 0" @click="removeRubricSelect(key)"></button>
+                                        </div>
+                                        <button type="button" class="btn append-rubric-btn" @click="appendRubricSelect"></button>
+                                    </div>
+                                    <div class="ap-submit"><button type="button" @click="addArticle">Добавить статью</button></div>
+                                </form>
+                            </div>
+                        </transition>
+                    </div>
+                    <div>
+                        <div class="ap-title" @click="selectAdminSection(2)">Добавить рубрику</div>
+                        <transition name="apcontent">
+                            <div class="ap-content" v-if="selectedAdminSections[2]">
+                                <form>
+                                    <div class="ap-input ap-inp-m"><input type="text" v-model="addRubricForm.name" class="inp-focus" placeholder="Название" /></div>
+                                    <div class="ap-submit"><button type="button" @click="addRubric">Добавить рубрику</button></div>
+                                </form>
+                            </div>
+                        </transition>
+                    </div>
+                </div>
+            </div>
+
+            <!--ARTICLE-->
+            <div class="main-block" :class="{'main-block-active': selectedPage === 2}">
+                <div class="article-page" v-if="selectedPage === 2">
+                    <div class="article-title">{{articles[selectedArticleKey].title}}</div>
+                    <div class="article-info">{{articles[selectedArticleKey].date}} / <span class="mb-meta"><span v-for="rubric in getArticleRubrics(articles[selectedArticleKey].id)">{{rubric}}</span></span></div>
+                    <div class="article-cont" v-html="articles[selectedArticleKey].data"></div>
+                </div>
+            </div>
+
+            <!--ARTICLES-->
+            <div class="main-block" :class="{'main-block-active': selectedPage === 1}">
+                <masonry :cols="{default: 4, 1700: 3, 900: 2}">
+                    <div class="masonry-block" v-for="(article, key) in articles" :key="key" v-if="article.isShowed && hasSelectedRubric(article.id)">
+                        <div class="mb-cont">
+                            <div class="mb-date">{{article.date}}</div>
+                            <div class="mb-title" @click="openArticle(article.id)">{{article.title}}</div>
+                            <div class="mb-meta-wrap mb-meta">
+                                <span v-for="rubric in getArticleRubrics(article.id)">{{rubric}}</span>
+                            </div>
+                            <div class="mb-des" v-html="article.data.substr(0, 150)+'...'"></div>
+                        </div>
+                    </div>
+                </masonry>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/vue.min.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script src="/js/vue-masonry.min.js"></script>
+
+    <script src="/js/modernizr-custom.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

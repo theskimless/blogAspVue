@@ -1,0 +1,438 @@
+* {
+    padding: 0;
+    margin: 0;
+    outline: none;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url(../fonts/Roboto-Light.ttf) format("truetype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url(../fonts/Roboto-Regular.ttf) format("truetype");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url(../fonts/Roboto-Bold.ttf) format("truetype");
+    font-weight: bold;
+}
+
+
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-Light.ttf) format("truetype");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-LightItalic.ttf) format("truetype");
+    font-style: italic;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-Regular.ttf) format("truetype");
+    font-weight: normal;
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-Italic.ttf) format("truetype");
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-SemiBold.ttf) format("truetype");
+    font-weight: bold;
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    src: url(../fonts/IBMPlexSans-SemiBoldItalic.ttf) format("truetype");
+    font-weight: bold;
+    font-style: italic;
+}
+
+body {
+    font: 1rem/1.7 "Roboto";
+    background-color: #f6f7f8;
+}
+
+a {
+    text-decoration: none;
+}
+textarea,
+select,
+input {
+    font: inherit;
+    border: none;
+}
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.d-flex {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: -ms-flex;
+    display: -o-flex;
+    display: flex;
+}
+
+header {
+    color: #fff;
+    background-color: #151515;
+    position: fixed;
+    width: 300px;
+    height: 100%;
+    left: 0;
+    top: 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+.h-logo {
+    margin: 20px 0;
+}
+
+.h-menu {
+    margin-top: 100%;
+}
+
+.h-link {
+    text-align: center;
+    line-height: 4.4rem;
+    font-size: 1.1em;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+}
+
+    .h-link-active,
+    .h-link:hover {
+        position: relative;
+        color: #fff;
+    }
+
+        .h-link:hover:before,
+        .h-link-active:before {
+            position: absolute;
+            content: "";
+            width: 100%;
+            height: 1px;
+            background: #ccc;
+            bottom: 15px;
+            left: 0;
+        }
+
+.wrap {
+    padding-left: 330px;
+    /*overflow-x: hidden;*/
+    max-width: 1820px;
+}
+.w-top-wrap {
+    width: 100%;
+    align-items: center;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+.w-top-buttons {
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: 20px;
+}
+.w-top-search {
+    margin-right: 20px;
+    width: 100%;
+    height: 40px;
+    background: url(/imgs/search.svg) left center no-repeat;
+    position: relative;
+}
+.visibility-hidden {
+    visibility: hidden;
+}
+.w-top-search input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-bottom: 1px solid #aaa;
+    padding-left: 40px;
+}
+
+.inp-focus:focus {
+    border-bottom-color: #000;
+}
+.w-top-user {
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    background: url(/imgs/user.svg) center no-repeat;
+    background-size: 23px;
+    -webkit-box-shadow: 0 0 18px rgba(0,0,0,.1);
+    box-shadow: 0 0 18px rgba(0,0,0,.1);
+    background-color: #fff;
+    transition: .3s;
+}
+    .w-top-user:hover {
+        background-color: #33998a;
+    }
+.w-top-user:hover .w-top-user-cont-wrap {
+    display: block;
+}
+.w-top-user-cont-wrap {
+    display: none;
+    z-index: 1;
+    position: absolute;
+    right: 0;
+    top: 90%;
+    width: 200px;
+}
+.w-top-user-cont {
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 25px;
+    /*top: calc(100% + 15px);*/
+    background: #fff;
+    -webkit-box-shadow: 0 0 18px rgba(0,0,0,.2);
+    box-shadow: 0 0 18px rgba(0,0,0,.2);
+}
+    .w-top-user-cont > div {
+        text-align: center;
+        padding: 10px 0;
+    }
+    .w-top-user-cont > div:hover {
+        background: #f5f5f5;
+    }
+.main-block {
+    width: calc(100% - 430px);
+    height: calc(100% - 120px);
+    overflow-y: auto;
+    position: fixed;
+    padding-top: 40px;
+    transition: .5s;
+    transform: translateX(200%);
+    opacity: 0;
+}
+.main-block-active {
+    opacity: 1;
+    transform: translateX(0);
+}
+/*CONTENT*/
+.grid-sizer,
+.masonry-block {
+    /*float: left;
+    width: 25%;*/
+}
+
+.masonry-block {
+    -webkit-box-shadow: 0 0 64px rgba(0,0,0,.05);
+    box-shadow: 0 0 64px rgba(0,0,0,.05);
+    background-color: #fff;
+    margin: 0 20px;
+    margin-bottom: 40px;
+}
+
+.mb-cont {
+    padding: 2.4rem 3rem 5.6rem;
+}
+
+.mb-date {
+    text-align: center;
+    color: #666;
+}
+
+.mb-title {
+    transition: .3s;
+    cursor: pointer;
+    line-height: 1.231;
+    font-size: 1.6rem;
+    font-weight: 400;
+    padding-top: 1.5rem;
+    margin-bottom: 0.3rem;
+    word-break: break-word;
+}
+
+    .mb-title:hover {
+        color: #33998a;
+    }
+.mb-meta-wrap {
+    margin-bottom: 2rem;
+}
+.mb-meta {
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #666;
+}
+    .mb-meta span:hover {
+        color: #33998a;
+    }
+
+.mb-des {
+    color: #555;
+    word-break: break-word;
+}
+
+/*ADMIN PAGE*/
+.ap-warnings,
+.ap-title {
+    cursor: pointer;
+    background: #fff;
+    padding: 5px 15px;
+    border: 1px solid #eee;
+    font-size: 1.2rem;
+}
+.ap-warnings {
+    background: #dd5252;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: #fff;
+    text-align: center;
+}
+.ap-content {
+    margin: 1rem 0;
+    max-height: 500px;
+    overflow: hidden;
+}
+.ap-content-hidden {
+    overflow-y: hidden;
+    height: 0;
+}
+
+.apcontent-enter-active,
+.apcontent-leave-active {
+    transition: all .5s;
+}
+.apcontent-enter,
+.apcontent-leave-to {
+    transform: translateY(-1rem);
+    max-height: 0;
+}
+/*ARTICLE*/
+.admin-page,
+.article-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+.article-title {
+    font-family: "IBM Plex Sans";
+    font-weight: bold;
+    font-size: 2.5rem;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 15px;
+}
+.article-info {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.article-cont {
+    font-family: "IBM Plex Sans";
+    font-weight: 400;
+    font-size: 1.2rem;
+    white-space: pre-wrap;
+}
+
+    .article-cont::first-letter {
+        font-size: 5rem;
+        float: left;
+        line-height: 4rem;
+        padding-right: 8px;
+    }
+
+.ap-inp-m {
+    margin-bottom: 2rem;
+}
+    .ap-input select,
+    .ap-input textarea,
+    .ap-input input {
+        width: 100%;
+        min-height: 3rem;
+        background: transparent;
+        border-bottom: 1px solid #aaa;
+        font-family: "IBM Plex Sans";
+    }
+    .ap-input textarea {
+        min-height: 5rem;
+    }
+.b-create-post-select {
+    align-items: center;
+    margin-right: 1rem;
+}
+.b-create-post-select select {
+    width: auto;
+    height: 2rem;
+}
+
+.ap-rubrics {
+    align-items: center;
+}
+.remove-rubric-btn {
+    background: red url(../imgs/plus-symbol.svg) center no-repeat;
+    transform: rotate(45deg);
+    margin-left: 1rem;
+}
+.append-rubric-btn {
+    background: #000 url(../imgs/plus-symbol.svg) center no-repeat;
+}
+.remove-rubric-btn,
+.append-rubric-btn {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-size: 70%;
+}
+
+.ap-submit button {
+    width: 100%;
+    padding: 18px 0;
+    text-align: center;
+    color: #fff;
+    background: #000;
+    text-transform: uppercase;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/*AUTH PAGE*/
+.auth-page {
+    position: fixed;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: rgba(0,0,0,.5);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.auth-p-block {
+    cursor: default;
+    background: #fff;
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+}
+.auth-p-title {
+    text-align: center;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}

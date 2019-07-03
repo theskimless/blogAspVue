@@ -1,0 +1,14 @@
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.csprojAssemblyReference.cache
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.csproj.CoreCompileInputs.cache
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.RazorAssemblyInfo.cache
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.RazorAssemblyInfo.cs
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.AssemblyInfoInputs.cache
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.AssemblyInfo.cs
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\bin\Debug\netcoreapp2.2\VueJsJWT.deps.json
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\bin\Debug\netcoreapp2.2\VueJsJWT.runtimeconfig.json
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\bin\Debug\netcoreapp2.2\VueJsJWT.runtimeconfig.dev.json
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\bin\Debug\netcoreapp2.2\VueJsJWT.dll
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\bin\Debug\netcoreapp2.2\VueJsJWT.pdb
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.RazorTargetAssemblyInfo.cache
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.dll
+C:\Users\Vitaliy\source\repos\VueJsJWT\VueJsJWT\obj\Debug\netcoreapp2.2\VueJsJWT.pdb
