@@ -22,13 +22,15 @@ var app = new Vue({
     el: "#blog",
     data: {
         testurl: "check",
+
         //0 - Admin, 1 - Articles, 2 - ArticlePage
         selectedPage: 1,
         mods: ["Статьи", "Админ. панель"],
         isAuthShowed: -1,
         isAdmin: false,
         selectedAdminSections: [],
-        adminPageWarnings: [],
+        adminPageErrors: [],
+        authErrors: [],
 
         searchInput: "",
 
@@ -38,6 +40,8 @@ var app = new Vue({
         rubrics: [],
         selectedRubric: 0,
 
+        loginForm: { login: "", password: "" },
+        registerForm: { login: "", email: "", password: "", confirmPassword: "" },
         addRubricForm: { name: "" },
         addArticleForm: { title: "", data: "", rubrics: [1] },
 
@@ -87,31 +91,33 @@ var app = new Vue({
         },
         //ADD RUBRIC
         addRubric() {
-            axios.post("blog/createRubric", this.addRubricForm)
+            this.adminPageErrors.length = [];
+            makeRequest("post", "blog/createRubric", this.addRubricForm)
                 .then(response => {
                     if (response.status === 200) window.location.reload();
                 }).catch(err => _(err));
         },
         //ADD ARTICLE
         addArticle() {
+            this.adminPageErrors.length = [];
             var addArticleForm = JSON.parse(JSON.stringify(this.addArticleForm));
             addArticleForm.rubrics = this.addArticleForm.rubrics.join(",");
 
-            axios.post("blog/createArticle", addArticleForm)
+            makeRequest("post", "blog/createArticle", addArticleForm)
                 .then(response => {
                     if (response.status === 200) window.location.reload();
                 }).catch(err => _(err));
         },
         //DELETE ARTICLE
         deleteArticle(articleId) {
-            axios.post("blog/deleteArticle", { Id: articleId })
+            makeRequest("post", "blog/deleteArticle", { Id: articleId })
                 .then(response => {
                     if (response.status === 200) window.location.reload();
                 }).catch(err => _(err));
         },
         //DELETE RUBRIC
-        deleteRubric(rubricId) {
-            axios.post("blog/deleteRubric", { Id: rubricId })
+        deleteRubric(rubricKey) {
+            makeRequest("post", "blog/deleteRubric", { Id: this.rubrics[rubricKey].id })
                 .then(response => {
                     if (response.status === 200) window.location.reload();
                 }).catch(err => _(err));
@@ -146,7 +152,7 @@ var app = new Vue({
             if (this.selectedRubric === 0) return true;
             //SHOW IF HAS SELECTED RUBRIC
             for (var i = 0; i < this.articleRubrics.length; i++) {
-                if (this.articleRubrics[i].articleId === articleId && this.articleRubrics[i].rubricId === this.selectedRubric) {
+                if (this.articleRubrics[i].articleId === articleId && this.articleRubrics[i].rubricId === this.rubrics[this.selectedRubric].id) {
                     return true;
                 }
             }
@@ -158,9 +164,16 @@ var app = new Vue({
                 if (this.articleRubrics[i].articleId === articleId) {
                     var rubric = "";
                     if (counter !== 0) rubric += " / ";
-                    rubric += this.rubrics[this.articleRubrics[i].rubricId];
-                    counter++;
-                    rubrics.push(rubric);
+
+                    for (var rubricKey in this.rubrics) {
+                        if (this.rubrics[rubricKey].id === this.articleRubrics[i].rubricId) {
+                            rubric += this.rubrics[rubricKey].name;
+                            counter++;
+                            rubrics.push(rubric);
+
+                            break;
+                        }
+                    }
                 }
             }
             return rubrics;
@@ -176,12 +189,8 @@ var app = new Vue({
                     var articles = data.articles;
 
                     if (rubrics.length !== 0) {
-                        //data.Rubrics = [0: {Id: 1, Name: "Text"}]
-                        rubrics = rubrics.map(p => p.name);
-                        rubrics.unshift("Все");
-                        //rubrics = [0: "Все", 1: "Text"]
+                        rubrics.unshift({ id: 0, name: "Все" });
                     }
-
                     if (articles.length !== 0) {
                         //TRANSFORM DATE 1 Января, 2019
                         for (var key in articles) {
@@ -191,88 +200,145 @@ var app = new Vue({
                         }
 
                         //SHOW THE NEWEST POSTS IN THE TOP
-                        articles = articles.slice().reverse();
+                        articles = articles.reverse();
                     }
 
                     this.articleRubrics = data.articleRubrics;
                     this.rubrics = rubrics;
                     this.articles = articles;
                 }).catch(err => _(err));
+        },
+        //AUTH
+        register() {
+            axios.post("/register", this.registerForm)
+                .then(response => {
+                    if (response.status === 200) {
+                        var data = response.data;
+                        localStorage.setItem("token", data.token);
+                        localStorage.setItem("refreshToken", data.refreshToken);
+                    }
+
+                }).catch(err => _(err));
+        },
+        login() {
+            axios.post("/login", this.loginForm)
+                .then(response => {
+                    if (response.status === 200) {
+                        var data = response.data;
+                        localStorage.setItem("token", data.token);
+                        localStorage.setItem("refreshToken", data.refreshToken);
+                        this.isAdmin = true;
+                        this.toggleAuth(-1);
+                    }
+                }).catch(err => _(err));
+        },
+        check() {
+            makeRequest("get", "/check")
+                .then(response => _(response))
+                .catch(err => _(err));
+        },
+        logOut() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            this.isAdmin = false;
         }
     },
     created() {
         this.getData();
+        var jwtToken = localStorage.getItem("token");
+        if (jwtToken !== null) {
+            if (getTokenExp(jwtToken) - Date.now() > 0) this.isAdmin = true;
+            else refreshToken()
+                .then(() => { this.isAdmin = true; })
+                .catch(err => _(err));
+        }
     }
 });
 
+//JWT TOKEN
+function refreshToken() {
+    return new Promise((resolve, reject) => {
+        axios.post("/refresh", { oldToken: localStorage.getItem("token"), oldRefreshToken: localStorage.getItem("refreshToken") })
+            .then(response => {
+                var data = response.data;
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("refreshToken", data.refreshToken);
+                resolve();
+            })
+            .catch(err => reject(err));
+    });
+}
+
+function requestWithJwt(method, url, data, jwtToken) {
+    return axios.request({
+        url: url,
+        method: method,
+        headers: { Authorization: "Bearer " + jwtToken },
+        data: data
+    });
+}
+
+function getTokenExp(jwtToken) {
+    var header = JSON.parse(atob(jwtToken.split(".")[1]));
+    return header.exp * 1000;
+}
+
+//MAKE REQUEST WITH JWT
+function makeRequest(method, url, data) {
+    //CLEAR Errors
+    return new Promise((resolve, reject) => {
+        var jwtToken = localStorage.getItem("token");
+        if (jwtToken === undefined || localStorage.getItem("refreshToken") === undefined) {
+            app.adminPageErrors.push("Это действие доступно только зарегестрированным пользователям");
+            reject("Log in or Sigh up");
+        }
+
+        if (getTokenExp(jwtToken) - Date.now() > 0) {
+            resolve(requestWithJwt(method, url, data, jwtToken));
+        }
+        //REFRESH TOKEN AND MAKE REQUEST AGAIN
+        else {
+            refreshToken()
+                .then(() => { resolve(requestWithJwt(method, url, data, jwtToken)); })
+                .catch(err => reject(err));
+        }
+    });
+}
+
 //AXIOS ERRORS
+function pushErrors(errorArray, errors) {
+    for (var key in errors) {
+        for (var key2 in errors[key]) {
+            app[errorArray].push(errors[key][key2]);
+        }
+    }
+}
+
 axios.interceptors.response.use(response => {
     return response;
 }, error => {
     if (error.response.status === 400) {
         if (typeof error.response.data === "object") {
-            for (var key in error.response.data.errors) {
-                for (var key2 in error.response.data.errors[key]) {
-                    app.adminPageWarnings.push(error.response.data.errors[key][key2]);
-                }
+            var errors = error.response.data.errors;
+
+            //SHOW ERRORS
+            switch (error.response.config.url) {
+                case "blog/createArticle":
+                case "blog/createRubric": pushErrors("adminPageErrors", errors); break;
+                case "/login": pushErrors("authErrors", errors); break;
             }
         }
         if (error.response.config.url === "blog/deleteRubric") {
             if (typeof error.response.data !== "object") {
-                app.adminPageWarnings.push(error.response.data);
+                app.adminPageErrors.push(error.response.data);
             }
         }
     }
-    else if (error.response.status === 401 && error.response.headers["token-expired"] === "true") {
-        var jwtToken = localStorage.getItem("token");
-
-        axios.post("/refresh", { oldToken: localStorage.getItem("token"), oldRefreshToken: localStorage.getItem("refreshToken") })
-            .then(response => {
-                var data = response.data;
-
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("refreshToken", data.refreshToken);
-            }).catch(err => {
-                _(err);
-            });
-    }
-    return error;
-});
-
-var app2 = new Vue({
-    el: "#app",
-    data: {
-        login: "",
-        password: ""
-    },
-    methods: {
-        reg() {
-            axios.post("/register", { login: this.login, password: this.password })
-                .then(response => {
-                    _(response);
-                    var data = response.data;
-
-                    localStorage.setItem("token", data.token);
-                    localStorage.setItem("refreshToken", data.refreshToken);
-                }).catch(err => {
-                    _(err);
-                });
-        },
-        log() {
-
-        },
-        showToken() {
-            var jwtToken = localStorage.getItem("token");
-            _(jwtToken);
-        },
-        check() {
-            var jwtToken = localStorage.getItem("token");
-            axios.get("/check", { headers: { Authorization: "Bearer " + jwtToken} })
-                .then(response => {
-                    _(response);
-                }).catch(err => {
-                    _(err);
-                });
+    else if (error.response.status === 401) {
+        if (error.response.headers["token-expired"] === "true") {
+            refreshToken
+                .catch(err => _(err));
         }
     }
+    return error;
 });

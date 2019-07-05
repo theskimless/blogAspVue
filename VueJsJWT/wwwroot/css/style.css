@@ -291,7 +291,7 @@ header {
 }
 
 /*ADMIN PAGE*/
-.ap-warnings,
+.ap-errors,
 .ap-title {
     cursor: pointer;
     background: #fff;
@@ -299,7 +299,7 @@ header {
     border: 1px solid #eee;
     font-size: 1.2rem;
 }
-.ap-warnings {
+.ap-errors {
     background: #dd5252;
     margin-bottom: 1rem;
     font-size: 1rem;
@@ -348,6 +348,7 @@ header {
     font-weight: 400;
     font-size: 1.2rem;
     white-space: pre-wrap;
+    word-break: break-word;
 }
 
     .article-cont::first-letter {

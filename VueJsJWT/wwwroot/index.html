@@ -10,27 +10,34 @@
 <body>
     <div id="blog">
         <header class="d-flex">
-            <div class="h-logo">LOGO</div>
+            <div class="h-logo" @click="check">LOGO</div>
             <div class="h-menu">
-                <div v-for="(rubric, key) in rubrics" class="h-link" :class="{'h-link-active': key === selectedRubric}" @click="selectedRubric = key">{{rubric}}</div>
+                <div v-for="(rubric, key) in rubrics" class="h-link" :class="{'h-link-active': key === selectedRubric}" @click="selectedRubric = key">{{rubric.name}}</div>
             </div>
         </header>
         <div class="wrap">
             <div class="d-flex auth-page" v-if="isAuthShowed !== -1">
                 <div class="auth-p-block" v-click-outside="toggleAuth">
-                    <div v-if="isAuthShowed === 0">
-                        <div class="auth-p-title">Вход</div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Логин/Email" /></div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Пароль" /></div>
-                        <div class="ap-submit"><button type="button">Войти</button></div>
+                    <div v-if="isAuthShowed === 0" class="auth-p-title">Вход</div>
+                    <div v-if="isAuthShowed === 1" class="auth-p-title">Регистрация</div>
+
+                    <div class="ap-errors" v-for="error in authErrors">
+                        {{error}}
                     </div>
+
+                    <!--LOG IN-->
+                    <div v-if="isAuthShowed === 0">
+                        <div class="ap-input ap-inp-m"><input v-model="loginForm.login" class="inp-focus" type="text" placeholder="Логин/Email" /></div>
+                        <div class="ap-input ap-inp-m"><input v-model="loginForm.password" class="inp-focus" type="text" placeholder="Пароль" /></div>
+                        <div class="ap-submit"><button type="button" @click="login">Войти</button></div>
+                    </div>
+                    <!--SIGN UP-->
                     <div v-if="isAuthShowed === 1">
-                        <div class="auth-p-title">Регистрация</div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Логин" /></div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="text" placeholder="Email" /></div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="password" placeholder="Пароль" /></div>
-                        <div class="ap-input ap-inp-m"><input class="inp-focus" type="password" placeholder="Подтвердите пароль" /></div>
-                        <div class="ap-submit"><button type="button">Зарегистрироваться</button></div>
+                        <div class="ap-input ap-inp-m"><input v-model="registerForm.login" class="inp-focus" type="text" placeholder="Логин" /></div>
+                        <div class="ap-input ap-inp-m"><input v-model="registerForm.email" class="inp-focus" type="text" placeholder="Email" /></div>
+                        <div class="ap-input ap-inp-m"><input v-model="registerForm.password" class="inp-focus" type="password" placeholder="Пароль" /></div>
+                        <div class="ap-input ap-inp-m"><input v-model="registerForm.confirmPassword" class="inp-focus" type="password" placeholder="Подтвердите пароль" /></div>
+                        <div class="ap-submit"><button type="button" @click="register">Зарегистрироваться</button></div>
                     </div>
                 </div>
             </div>
@@ -47,13 +54,13 @@
                     <div class="w-top-user-cont-wrap">
                         <div class="w-top-user-cont">
                             <!--GUEST-->
-                            <div @click="toggleAuth(0)">Вход</div>
-                            <div @click="toggleAuth(1)">Регистрация</div>
+                            <div v-if="!isAdmin" @click="toggleAuth(0)">Вход</div>
+                            <div v-if="!isAdmin" @click="toggleAuth(1)">Регистрация</div>
 
                             <!--ADMIN-->
                             <div v-if="isAdmin" @click="selectedPage === 1 ? selectPage(0) : selectPage(1)">{{mods[selectedPage] || "Статьи"}}</div>
-                            <div v-if="isAdmin">Профиль</div>
-                            <div v-if="isAdmin">Выйти</div>
+                            <!--<div v-if="isAdmin">Профиль</div>-->
+                            <div v-if="isAdmin" @click="logOut">Выйти</div>
                         </div>
                     </div>
                 </div>
@@ -62,14 +69,14 @@
             <!--ADMIN-->
             <div class="main-block" :class="{'main-block-active': selectedPage === 0}">
                 <div class="admin-page">
-                    <div class="ap-warnings" v-for="error in adminPageWarnings">
+                    <div class="ap-errors" v-for="error in adminPageErrors">
                         {{error}}
                     </div>
                     <div>
                         <div class="ap-title" @click="selectAdminSection(3)">Удалить рубрику</div>
                         <transition name="apcontent">
                             <div class="ap-content" v-if="selectedAdminSections[3]">
-                                <div v-for="(rubric, key) in rubrics" @click="deleteRubric(key)">{{rubric}}</div>
+                                <div v-for="(rubric, key) in rubrics" @click="deleteRubric(key)">{{rubric.name}}</div>
                             </div>
                         </transition>
                     </div>
@@ -90,14 +97,14 @@
                                     <div class="ap-input ap-inp-m"><textarea class="inp-focus" placeholder="Текст" v-model="addArticleForm.data"></textarea></div>
 
                                     <!--<form>
-                                <input @change="filetest" type="file" multiple />
-                                <img :src="testurl" />
-                            </form>-->
+                                        <input @change="filetest" type="file" multiple />
+                                        <img :src="testurl" />
+                                    </form>-->
 
                                     <div class="d-flex ap-rubrics ap-inp-m">
                                         <div class="d-flex b-create-post-select ap-input" v-for="(select, key) in addArticleForm.rubrics">
                                             <select v-model="addArticleForm.rubrics[key]">
-                                                <option :value="rubricKey" v-for="(rubric, rubricKey) in rubrics" v-if="rubricKey !== 0 && rubricIsNotSelected(key, rubricKey)">{{rubric}}</option>
+                                                <option v-for="(rubric, rubricKey) in rubrics" :value="rubric.id" v-if="rubricKey !== 0 && rubricIsNotSelected(key, rubricKey)">{{rubric.name}}</option>
                                             </select>
                                             <button type="button" class="remove-rubric-btn" v-if="key !== 0" @click="removeRubricSelect(key)"></button>
                                         </div>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -43,6 +44,7 @@ namespace VueJsJWT.Controllers
             return new JsonResult(indexView);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("getArticle")]
         public string GetArticle(int articleId)
         {
@@ -52,8 +54,9 @@ namespace VueJsJWT.Controllers
         }
 
         // POST CREATE ARTICLE
+        [Authorize(Roles = "Admin")]
         [HttpPost("createArticle")]
-        public async Task<ActionResult> CreateArticle(ArticleViewModel model)
+        public async Task<ActionResult> CreateArticle([FromBody]ArticleViewModel model)
         {
             if (!string.IsNullOrEmpty(model.Title) && !string.IsNullOrEmpty(model.Rubrics) && !string.IsNullOrEmpty(model.Data))
             {
@@ -71,11 +74,23 @@ namespace VueJsJWT.Controllers
             return Ok();
         }
 
+        // POST CREATE RUBRIC
+        [Authorize(Roles = "Admin")]
+        [HttpPost("createRubric")]
+        public async Task<ActionResult> CreateRubric(RubricViewModel model)
+        {
+            await _dbContext.Rubrics.AddAsync(new Rubric { Name = model.Name });
+            await _dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
         public class IdModel
         {
             [Required]
             public int Id { get; set; }
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("deleteArticle")]
         public async Task DeleteArticle([FromBody]IdModel model)
         {
@@ -83,6 +98,8 @@ namespace VueJsJWT.Controllers
             _dbContext.ArticleRubrics.RemoveRange(_dbContext.ArticleRubrics.Where(p => p.ArticleId == model.Id));
             await _dbContext.SaveChangesAsync();
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("deleteRubric")]
         public async Task<ActionResult> DeleteRubric([FromBody]IdModel model)
         {
@@ -105,15 +122,6 @@ namespace VueJsJWT.Controllers
                 await _dbContext.SaveChangesAsync();
             }
 
-            return Ok();
-        }
-
-        // POST CREATE RUBRIC
-        [HttpPost("createRubric")]
-        public async Task<ActionResult> CreateRubric(RubricViewModel model)
-        {
-            //await _dbContext.Rubrics.AddAsync(new Rubric { Name = model.Name });
-            //await _dbContext.SaveChangesAsync();
             return Ok();
         }
 

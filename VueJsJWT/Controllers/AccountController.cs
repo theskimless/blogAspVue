@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -15,42 +16,57 @@ using System.Text;
 using System.Threading.Tasks;
 using VueJsJWT.Data;
 using VueJsJWT.Identity;
+using VueJsJWT.ViewModels;
 
 namespace VueJsJWT.Controllers
 {
-    public class AccountController : Controller
+    [ApiController]
+    public class AccountController : ControllerBase
     {
         private UserManager<User> _userManager;
         private IConfiguration _configuration;
         private AppDbContext _dbContext;
-        public AccountController(UserManager<User> userManager, IConfiguration configuration, AppDbContext dbContext)
+        private RoleManager<IdentityRole> _roleManager;
+        public AccountController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, AppDbContext dbContext)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
             _dbContext = dbContext;
         }
 
-        [Route("/login")]
-        [HttpPost]
-        public async Task<IActionResult> Login(string login, string password)
+        [HttpPost("/login")]
+        public async Task<ActionResult> Login(LoginViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(login);
-            if(user != null && await _userManager.CheckPasswordAsync(user, password))
+            var user = _dbContext.Users.FirstOrDefault(p => p.UserName == model.Login || p.Email == model.Login);
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var claim = new[]
+                var role = await _userManager.GetRolesAsync(user);
+                var claims = new[]
                 {
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email)
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
+                    new Claim(ClaimsIdentity.DefaultRoleClaimType, role[0])
                 };
-
-                return await RefreshToken(claim, user);
+                return await RefreshToken(claims, user);
             }
             return BadRequest();
+        }
+
+        [HttpGet("/check")]
+        [Authorize(Roles = "Admin")]
+        public async Task<string> Check()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return JsonConvert.SerializeObject(new {
+                headers = HttpContext.Request.Headers,
+                auth = HttpContext.User.Identity.IsAuthenticated.ToString()
+            });
         }
 
         private string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
-            using(var rng = RandomNumberGenerator.Create())
+            using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
                 return Convert.ToBase64String(randomNumber);
@@ -74,26 +90,13 @@ namespace VueJsJWT.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        [Route("/check")]
-        [HttpGet]
-        [Authorize]
-        public string Check()
-        {
-            return JsonConvert.SerializeObject(new {
-                headers = HttpContext.Request.Headers,
-                auth = HttpContext.User.Identity.IsAuthenticated.ToString()
-            });
-            //return HttpContext.User.Identity.IsAuthenticated.ToString();
-        }
-
-        [Route("/register")]
-        [HttpPost]
-        public async Task<IActionResult> Register([FromBody]RegisterViewModel model)
+        [HttpPost("/register")]
+        public async Task<ActionResult> Register(RegisterViewModel model)
         {
             var user = new User
             {
-                Email = model.Login,
-                UserName = model.Login
+                UserName = model.Login,
+                Email = model.Email
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -101,9 +104,10 @@ namespace VueJsJWT.Controllers
             {
                 await _userManager.AddToRoleAsync(user, "Writer");
 
-                var claim = new[]
+                var claims = new[]
                 {
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email)
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
+                    new Claim(ClaimsIdentity.DefaultRoleClaimType, "Writer")
                 };
                 var newRefreshToken = GenerateRefreshToken();
 
@@ -112,7 +116,7 @@ namespace VueJsJWT.Controllers
 
                 return new ObjectResult(new
                 {
-                    token = GenerateToken(claim),
+                    token = GenerateToken(claims),
                     refreshToken = newRefreshToken
                 });
             }
@@ -148,8 +152,8 @@ namespace VueJsJWT.Controllers
             var newToken = GenerateToken(claims);
             var newRefreshToken = GenerateRefreshToken();
 
-            _dbContext.RefreshTokens.Remove(user.RefreshTokens[0]);
-            await _dbContext.RefreshTokens.AddAsync(new RefreshToken { User = user, Token = newRefreshToken });
+            _dbContext.RefreshTokens.FirstOrDefault(p => p.UserId == user.Id).Token = newRefreshToken;
+
             await _dbContext.SaveChangesAsync();
 
             return new ObjectResult(new
@@ -164,7 +168,7 @@ namespace VueJsJWT.Controllers
         public async Task<IActionResult> Refresh([FromBody]JwtTokenModel refreshViewModel)
         {
             var principal = GetPrincipalFromExpiredToken(refreshViewModel.oldToken);
-            var user = _dbContext.Users.Include(p => p.RefreshTokens).FirstOrDefault(p => p.Email == principal.Claims.ElementAt(0).Value);
+            var user = _dbContext.Users.Include(p => p.RefreshTokens).FirstOrDefault(p => p.UserName == principal.Claims.ElementAt(0).Value);
             if (refreshViewModel.oldRefreshToken != user.RefreshTokens[0].Token)
                 throw new SecurityTokenException("Invalid refresh token");
 
@@ -175,10 +179,5 @@ namespace VueJsJWT.Controllers
     {
         public string oldToken { get; set; }
         public string oldRefreshToken { get; set; }
-    }
-    public class RegisterViewModel
-    {
-        public string Login { get; set; }
-        public string Password { get; set; }
     }
 }
